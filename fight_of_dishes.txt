@@ -1,0 +1,39 @@
+                    🍽️ FIGHT OF DISHES 🍽️
+                    =====================
+
+    ╔══════════════════════════════════════════════════════════════╗
+    ║                                                              ║
+    ║    🍽️ Plate Warrior     vs     🥣 Bowl Fighter              ║
+    ║         ⚔️                           ⚔️                      ║
+    ║                                                              ║
+    ║    🔪 Knife Assassin    vs     🍴 Fork Knight               ║
+    ║         ⚔️                           ⚔️                      ║
+    ║                                                              ║
+    ║    🥄 Spoon Mage        vs     🍷 Wine Glass Archer         ║
+    ║         ⚔️                           ⚔️                      ║
+    ║                                                              ║
+    ║                    💥 BATTLE ARENA 💥                        ║
+    ║                                                              ║
+    ║    🍽️  ⚔️  🥣    🔪  ⚔️  🍴    🥄  ⚔️  🍷                ║
+    ║                                                              ║
+    ║              🏆 THE ULTIMATE KITCHEN WAR 🏆                  ║
+    ║                                                              ║
+    ║    "May the best dish win!" - Kitchen Master Chef           ║
+    ║                                                              ║
+    ╚══════════════════════════════════════════════════════════════╝
+
+    Battle Status:
+    🍽️ Plate Warrior: 100 HP ⚔️ Attack: 15
+    🥣 Bowl Fighter: 95 HP ⚔️ Attack: 12
+    🔪 Knife Assassin: 80 HP ⚔️ Attack: 25
+    🍴 Fork Knight: 90 HP ⚔️ Attack: 18
+    🥄 Spoon Mage: 85 HP ⚔️ Attack: 10 (Magic)
+    🍷 Wine Glass Archer: 70 HP ⚔️ Attack: 20 (Ranged)
+
+    Special Abilities:
+    🍽️ Plate: "Shield Bash" - Deflects 50% damage
+    🥣 Bowl: "Soup Storm" - Area damage to all enemies
+    🔪 Knife: "Critical Slice" - 3x damage on critical hits
+    🍴 Fork: "Multi-Stab" - Attacks multiple times
+    🥄 Spoon: "Healing Potion" - Restores HP to allies
+    🍷 Wine Glass: "Intoxicating Shot" - Confuses enemies
