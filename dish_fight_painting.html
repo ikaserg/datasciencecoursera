@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fight of Dishes - Digital Painting</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .painting-container {
+            background: #fff;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        canvas {
+            border: 3px solid #34495e;
+            border-radius: 15px;
+            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+        }
+        
+        .controls {
+            margin-top: 15px;
+        }
+        
+        button {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 0 10px;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="painting-container">
+        <h1>🥊 Fight of Dishes 🥊</h1>
+        <canvas id="paintingCanvas" width="800" height="600"></canvas>
+        <div class="controls">
+            <button onclick="startFight()">Start Fight!</button>
+            <button onclick="resetPainting()">Reset</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('paintingCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let animationId;
+        let fightActive = false;
+        let time = 0;
+        
+        // Dish objects
+        const dishes = [
+            {
+                x: 150, y: 300, width: 80, height: 80,
+                color: '#e74c3c', name: 'Plate Warrior',
+                angle: 0, vx: 0, vy: 0,
+                health: 100, maxHealth: 100,
+                expression: 'angry'
+            },
+            {
+                x: 650, y: 300, width: 80, height: 80,
+                color: '#3498db', name: 'Bowl Fighter',
+                angle: 0, vx: 0, vy: 0,
+                health: 100, maxHealth: 100,
+                expression: 'determined'
+            }
+        ];
+        
+        // Particles for effects
+        const particles = [];
+        
+        function createParticle(x, y, color) {
+            particles.push({
+                x: x, y: y,
+                vx: (Math.random() - 0.5) * 10,
+                vy: (Math.random() - 0.5) * 10,
+                life: 1.0,
+                color: color,
+                size: Math.random() * 4 + 2
+            });
+        }
+        
+        function drawBackground() {
+            // Kitchen counter background
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#f8f9fa');
+            gradient.addColorStop(1, '#e9ecef');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Counter edge
+            ctx.fillStyle = '#6c757d';
+            ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+            
+            // Kitchen tiles
+            ctx.strokeStyle = '#dee2e6';
+            ctx.lineWidth = 2;
+            for (let x = 0; x < canvas.width; x += 40) {
+                for (let y = 0; y < canvas.height - 50; y += 40) {
+                    ctx.strokeRect(x, y, 40, 40);
+                }
+            }
+            
+            // Kitchen items
+            drawKitchenItems();
+        }
+        
+        function drawKitchenItems() {
+            // Sink
+            ctx.fillStyle = '#95a5a6';
+            ctx.fillRect(50, 50, 120, 80);
+            ctx.fillStyle = '#7f8c8d';
+            ctx.fillRect(60, 60, 100, 60);
+            
+            // Stove
+            ctx.fillStyle = '#2c3e50';
+            ctx.fillRect(650, 50, 120, 80);
+            ctx.fillStyle = '#34495e';
+            ctx.fillRect(660, 60, 100, 60);
+            
+            // Cabinet
+            ctx.fillStyle = '#8b4513';
+            ctx.fillRect(200, 20, 400, 100);
+            ctx.fillStyle = '#a0522d';
+            ctx.fillRect(210, 30, 380, 80);
+        }
+        
+        function drawDish(dish) {
+            ctx.save();
+            ctx.translate(dish.x + dish.width/2, dish.y + dish.height/2);
+            ctx.rotate(dish.angle);
+            
+            // Main dish body
+            ctx.fillStyle = dish.color;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, dish.width/2, dish.height/2, 0, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Dish rim
+            ctx.strokeStyle = '#2c3e50';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            // Inner circle
+            ctx.fillStyle = '#ecf0f1';
+            ctx.beginPath();
+            ctx.ellipse(0, 0, dish.width/3, dish.height/3, 0, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Expression
+            drawExpression(dish);
+            
+            // Health bar
+            drawHealthBar(dish);
+            
+            ctx.restore();
+        }
+        
+        function drawExpression(dish) {
+            ctx.fillStyle = '#2c3e50';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            
+            if (dish.expression === 'angry') {
+                // Angry eyes
+                ctx.fillRect(-15, -10, 8, 8);
+                ctx.fillRect(7, -10, 8, 8);
+                // Angry mouth
+                ctx.beginPath();
+                ctx.arc(0, 5, 10, 0, Math.PI);
+                ctx.stroke();
+            } else if (dish.expression === 'determined') {
+                // Determined eyes
+                ctx.fillRect(-15, -10, 8, 8);
+                ctx.fillRect(7, -10, 8, 8);
+                // Determined mouth
+                ctx.fillRect(-8, 5, 16, 3);
+            } else if (dish.expression === 'hurt') {
+                // X eyes
+                ctx.strokeStyle = '#e74c3c';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(-15, -15);
+                ctx.lineTo(-7, -7);
+                ctx.moveTo(-7, -15);
+                ctx.lineTo(-15, -7);
+                ctx.moveTo(7, -15);
+                ctx.lineTo(15, -7);
+                ctx.moveTo(15, -15);
+                ctx.lineTo(7, -7);
+                ctx.stroke();
+            }
+        }
+        
+        function drawHealthBar(dish) {
+            const barWidth = 60;
+            const barHeight = 8;
+            const x = -barWidth/2;
+            const y = -dish.height/2 - 20;
+            
+            // Background
+            ctx.fillStyle = '#e74c3c';
+            ctx.fillRect(x, y, barWidth, barHeight);
+            
+            // Health
+            ctx.fillStyle = '#27ae60';
+            ctx.fillRect(x, y, (dish.health / dish.maxHealth) * barWidth, barHeight);
+            
+            // Border
+            ctx.strokeStyle = '#2c3e50';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, y, barWidth, barHeight);
+        }
+        
+        function drawParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const particle = particles[i];
+                
+                ctx.save();
+                ctx.globalAlpha = particle.life;
+                ctx.fillStyle = particle.color;
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.size, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.restore();
+                
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.life -= 0.02;
+                
+                if (particle.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+        
+        function drawMotionLines() {
+            if (!fightActive) return;
+            
+            ctx.strokeStyle = 'rgba(52, 73, 94, 0.3)';
+            ctx.lineWidth = 2;
+            
+            for (let i = 0; i < 20; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const length = Math.random() * 50 + 20;
+                const angle = Math.random() * Math.PI * 2;
+                
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + Math.cos(angle) * length, y + Math.sin(angle) * length);
+                ctx.stroke();
+            }
+        }
+        
+        function updateDishes() {
+            if (!fightActive) return;
+            
+            time += 0.1;
+            
+            // Animate dishes
+            dishes.forEach((dish, index) => {
+                // Bouncing movement
+                dish.vx += (Math.random() - 0.5) * 0.5;
+                dish.vy += (Math.random() - 0.5) * 0.5;
+                
+                // Apply velocity
+                dish.x += dish.vx;
+                dish.y += dish.vy;
+                
+                // Bounce off walls
+                if (dish.x < 0 || dish.x > canvas.width - dish.width) {
+                    dish.vx *= -0.8;
+                    dish.x = Math.max(0, Math.min(canvas.width - dish.width, dish.x));
+                }
+                if (dish.y < 0 || dish.y > canvas.height - dish.height - 50) {
+                    dish.vy *= -0.8;
+                    dish.y = Math.max(0, Math.min(canvas.height - dish.height - 50, dish.y));
+                }
+                
+                // Rotation
+                dish.angle += dish.vx * 0.02;
+                
+                // Damping
+                dish.vx *= 0.98;
+                dish.vy *= 0.98;
+                
+                // Collision detection
+                const otherDish = dishes[1 - index];
+                const dx = dish.x - otherDish.x;
+                const dy = dish.y - otherDish.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < dish.width/2 + otherDish.width/2) {
+                    // Collision!
+                    const angle = Math.atan2(dy, dx);
+                    const force = 5;
+                    
+                    dish.vx += Math.cos(angle) * force;
+                    dish.vy += Math.sin(angle) * force;
+                    otherDish.vx -= Math.cos(angle) * force;
+                    otherDish.vy -= Math.sin(angle) * force;
+                    
+                    // Damage
+                    dish.health -= 5;
+                    otherDish.health -= 5;
+                    
+                    // Create impact particles
+                    for (let i = 0; i < 10; i++) {
+                        createParticle(
+                            (dish.x + otherDish.x) / 2,
+                            (dish.y + otherDish.y) / 2,
+                            '#f39c12'
+                        );
+                    }
+                    
+                    // Change expressions
+                    if (dish.health < 50) dish.expression = 'hurt';
+                    if (otherDish.health < 50) otherDish.expression = 'hurt';
+                }
+                
+                // Keep health above 0
+                dish.health = Math.max(0, dish.health);
+            });
+        }
+        
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            drawBackground();
+            drawMotionLines();
+            drawParticles();
+            
+            dishes.forEach(dish => {
+                drawDish(dish);
+            });
+            
+            // Fight status
+            if (fightActive) {
+                ctx.fillStyle = 'rgba(231, 76, 60, 0.8)';
+                ctx.font = 'bold 24px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('FIGHT!', canvas.width/2, 50);
+            }
+            
+            // Winner announcement
+            const aliveDishes = dishes.filter(dish => dish.health > 0);
+            if (fightActive && aliveDishes.length === 1) {
+                ctx.fillStyle = 'rgba(39, 174, 96, 0.9)';
+                ctx.font = 'bold 32px Arial';
+                ctx.fillText(`${aliveDishes[0].name} WINS!`, canvas.width/2, canvas.height/2);
+                fightActive = false;
+            }
+        }
+        
+        function animate() {
+            updateDishes();
+            draw();
+            animationId = requestAnimationFrame(animate);
+        }
+        
+        function startFight() {
+            if (fightActive) return;
+            
+            fightActive = true;
+            time = 0;
+            
+            // Reset dish positions and health
+            dishes[0].x = 150;
+            dishes[0].y = 300;
+            dishes[0].health = 100;
+            dishes[0].expression = 'angry';
+            dishes[0].vx = 0;
+            dishes[0].vy = 0;
+            
+            dishes[1].x = 650;
+            dishes[1].y = 300;
+            dishes[1].health = 100;
+            dishes[1].expression = 'determined';
+            dishes[1].vx = 0;
+            dishes[1].vy = 0;
+            
+            // Clear particles
+            particles.length = 0;
+            
+            // Add initial impact
+            for (let i = 0; i < 20; i++) {
+                createParticle(canvas.width/2, canvas.height/2, '#e74c3c');
+            }
+        }
+        
+        function resetPainting() {
+            fightActive = false;
+            time = 0;
+            
+            // Reset dishes
+            dishes[0].x = 150;
+            dishes[0].y = 300;
+            dishes[0].health = 100;
+            dishes[0].expression = 'angry';
+            dishes[0].vx = 0;
+            dishes[0].vy = 0;
+            dishes[0].angle = 0;
+            
+            dishes[1].x = 650;
+            dishes[1].y = 300;
+            dishes[1].health = 100;
+            dishes[1].expression = 'determined';
+            dishes[1].vx = 0;
+            dishes[1].vy = 0;
+            dishes[1].angle = 0;
+            
+            // Clear particles
+            particles.length = 0;
+            
+            draw();
+        }
+        
+        // Initialize
+        draw();
+    </script>
+</body>
+</html>
